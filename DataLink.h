@@ -260,7 +260,7 @@ int llread(int fd, unsigned char **buffer) {
 				fileBuf[size++] = x;
 				state = DONE;
 			} else if (x != FLAG) {
-				if (size > 65540) {
+				if (size > MAX) {
 					COMMAND = createCommand(REJ);
 					stats->rejSent++;
 
