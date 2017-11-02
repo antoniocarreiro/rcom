@@ -45,6 +45,7 @@
 #define _POSIX_SOURCE    1
 #define PROGRESS_BAR     45
 #define MAX_SIZE         512
+#define MAX 131085
 #define BAUDRATE         B38400
 
 #include <stdio.h>
@@ -96,7 +97,7 @@ void printProgress(float curr, float total) {
 	int i, pos = (per * PROGRESS_BAR) / 100.0;
 	for (i = 0; i < PROGRESS_BAR; i++) {
 		if (i <= pos)
-			printf("=");
+			printf("#");
 		else
 			printf(" ");
 	}
