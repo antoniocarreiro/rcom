@@ -11,7 +11,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-#define BUFFER_SIZE 512
+#define BUFFER_SIZE 256
 #define BUFFER_LENGTH BUFFER_SIZE - 1
 #define START_SM 0
 #define USER_SM 1
@@ -157,6 +157,7 @@ int new_passive_connection(char *str)
 	char server_address[16];
 	sprintf(server_address, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
 	uint16_t server_port = (port[0] << 8) + port[1];
+printf("%d", server_port);
 	return new_connection(server_address, server_port);
 }
 
@@ -229,10 +230,13 @@ int main(int argc, char** argv)
 	verify_answer(sockfd1, 230, buf);
 
 	// enter passive mode
-	sprintf(buf, "pasv\r\n");
+	sprintf(buf, "pasv \r\n");
 	write_to_socket(sockfd1, buf);
+	printf("BUF %s\n", buf);
+	verify_answer(sockfd1, 0, buf);
+	verify_answer(sockfd1, 0, buf);
 	verify_answer(sockfd1, 227, buf);
-
+puts(buf);
 	int sockfd2 = new_passive_connection(buf);
 
 	// get path
@@ -241,7 +245,8 @@ int main(int argc, char** argv)
 	verify_answer(sockfd1, 150, buf);
 
 	// receive data
-	char *filename = strrchr(url_path, '/') + 1;
+	//char *filename = strrchr(url_path, '/') + 1;
+	char *filename = url_path;
 	int bytes = -1, fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC);
 	if (fd < 0) {
 		perror("open()");
