@@ -1,9 +1,9 @@
-#include <netdb.h>
+#include <netdb.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h> 
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -22,7 +22,6 @@
 #define ERROR_SM 6
 #define DEFAULT_FTP_PORT 21
 
-
 size_t find_pos(char *str, char toFind, size_t startPos)
 {
 	int endPos;
@@ -40,7 +39,6 @@ void copy_string(char *dest, char *src, size_t n)
 		dest[i] = src[i];
 	dest[i] = '\0';
 }
-
 
 
 void split_ftp_address(char *ftp_address, char *user, char *password, char *hostname, char *url_path)
@@ -157,7 +155,6 @@ int new_passive_connection(char *str)
 	char server_address[16];
 	sprintf(server_address, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
 	uint16_t server_port = (port[0] << 8) + port[1];
-printf("%d", server_port);
 	return new_connection(server_address, server_port);
 }
 
@@ -195,7 +192,7 @@ void verify_answer(int sockfd, int expectedAnswer, char *str)
 }
 
 int main(int argc, char** argv)
-{
+{  	
 	if (argc != 2) {
 		printf("Usage: %s <ftp address>\n", argv[0]);
 		exit(-1);
@@ -203,6 +200,7 @@ int main(int argc, char** argv)
 
 	char user[BUFFER_SIZE], password[BUFFER_SIZE], hostname[BUFFER_SIZE], url_path[BUFFER_SIZE];
 	split_ftp_address(argv[1], user, password, hostname, url_path);
+	int flag = 0;
 
 	// get host by name
 	struct hostent *h;
@@ -225,28 +223,33 @@ int main(int argc, char** argv)
 	write_to_socket(sockfd1, buf);
 	verify_answer(sockfd1, 331, buf);
 
+	if(!strcmp(user, "anonymous"))
+		flag = 1;
+
 	sprintf(buf, "pass %s\r\n", password);
 	write_to_socket(sockfd1, buf);
 	verify_answer(sockfd1, 230, buf);
 
 	// enter passive mode
-	sprintf(buf, "pasv \r\n");
+	sprintf(buf, "pasv\r\n");
 	write_to_socket(sockfd1, buf);
-	printf("BUF %s\n", buf);
-	verify_answer(sockfd1, 0, buf);
-	verify_answer(sockfd1, 0, buf);
+	if(flag)
+		verify_answer(sockfd1, 0, buf);
 	verify_answer(sockfd1, 227, buf);
-puts(buf);
+
 	int sockfd2 = new_passive_connection(buf);
 
 	// get path
 	sprintf(buf, "retr %s\r\n", url_path);
 	write_to_socket(sockfd1, buf);
 	verify_answer(sockfd1, 150, buf);
-
+	
 	// receive data
-	//char *filename = strrchr(url_path, '/') + 1;
-	char *filename = url_path;
+	char *filename;
+	if(flag)
+		filename = url_path;
+	else
+		filename = strrchr(url_path, '/') + 1;
 	int bytes = -1, fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC);
 	if (fd < 0) {
 		perror("open()");
@@ -283,3 +286,4 @@ puts(buf);
 
 	return 0;
 }
+
